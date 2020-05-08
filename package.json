@@ -1,0 +1,19 @@
+{
+    "name": "lnrp",
+    "version": "0.0.1",
+    "description": "",
+    "main": "index.js",
+    "scripts": {
+        "test": "jest"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "@types/jest": "^25.2.1",
+        "@types/node": "^13.13.5",
+        "jest": "^26.0.1",
+        "ts-jest": "^25.5.0",
+        "typescript": "^3.8.3"
+    }
+}
