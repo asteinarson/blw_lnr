@@ -1,8 +1,12 @@
 {
-    "name": "lnrp",
+    "name": "lnr",
     "version": "0.0.1",
     "description": "",
+    "type": "module",
     "main": "index.js",
+    "bin": {
+        "lnrp": "./lib/index.js"
+    },
     "scripts": {
         "test": "jest"
     },
@@ -15,5 +19,10 @@
         "jest": "^26.0.1",
         "ts-jest": "^25.5.0",
         "typescript": "^3.8.3"
+    },
+    "dependencies": {
+        "chalk": "^4.0.0",
+        "commander": "^5.1.0",
+        "lodash": "^4.17.15"
     }
 }
