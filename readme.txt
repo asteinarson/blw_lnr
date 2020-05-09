@@ -22,12 +22,13 @@ way, in workspace code.
 
 Commands
 ========
+lnr init    
 lnr fetch [-b/--bind] <repository link>
 lnr bind [-l/--local -r/--recursive] <package name>
-lnr unbind [-o/--old-version] [-p/--package-version] [-v/--version version_number] <package name>
+lnr unbind [-o/--old_version] [-p/--package_version] [-v/--version version_number] <package name>
 lnr drop <package name>
 lnr status 
-lnr install    # This both fetches repso and binds them into package.json:s.
+lnr install [-f/--fetch_only]   # This both fetches repso and binds them into package.json:s.
 
 Directory and state files
 =========================
