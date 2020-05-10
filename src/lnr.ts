@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { Command } from "commander";
+import * as lnr from "./cmd";
 
 let cmd = new Command();
 
@@ -9,16 +10,14 @@ cmd.command("init ")
         "Initialize the root from where lnr runs from (creates lnr.json)"
     )
     .action(() => {
-        console.log("init");
+        lnr.init();
     });
 
 cmd.command("fetch <repo_url>")
     .description("Fetch a repository to current project")
     .option("-b, --bind", "Bind repositry into current package.json")
     .action((repo_url, options) => {
-        console.log("fetch");
-        console.log(repo_url);
-        console.log(options.bind);
+        lnr.fetch(repo_url, options);
     });
 
 cmd.command("bind <name>")
@@ -29,10 +28,7 @@ cmd.command("bind <name>")
         "Also bind package into sub packages (aka Yarn workspaces)"
     )
     .action((name, options) => {
-        console.log("bind");
-        console.log(name);
-        console.log(options.local);
-        console.log(options.recursive);
+        lnr.bind(name, options);
     });
 
 cmd.command("unbind <name>")
@@ -47,32 +43,26 @@ cmd.command("unbind <name>")
         "Set to explicit version number (or one of 'o', 'p')"
     )
     .action((name, options) => {
-        console.log("unbind");
-        console.log(name);
-        console.log(options.old_version);
-        console.log(options.package_version);
-        console.log(options.version);
+        lnr.unbind(name, options);
     });
 
 cmd.command("drop <name>")
     .description("Drop the local repository")
-    .action((name) => {
-        console.log("drop");
-        console.log("name");
+    .action((name, options) => {
+        lnr.drop(name, options);
     });
 
 cmd.command("status")
     .description("Status of repositories/packages from current lnr root")
-    .action(() => {
-        console.log("status");
+    .action((options) => {
+        lnr.status(options);
     });
 
 cmd.command("install")
     .description("Install and bind packages from current lnr root")
     .option("-f, --fetch_only", "Only fetch repositories")
     .action((options) => {
-        console.log("install");
-        console.log("options.fetch_only");
+        lnr.install(options);
     });
 
 cmd.parse(process.argv);
