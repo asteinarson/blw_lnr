@@ -15,7 +15,7 @@ When that work settles, when it is tested to the extent it can be, then it is
 time for the version increment, publish and package update cycle, in the work-
 space. 
 
-So this tool can temporarily (or for a longer time) convert a NPM package 
+So this tool can temporarily (or for a longer time) convert an NPM package 
 dependency to a local version controlled repository (GIT), allow for work 
 being done in that repository, while consuming the package exactly the same
 way, in workspace code. 
