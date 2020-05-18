@@ -1,5 +1,6 @@
 {
     "name": "lnr",
+    "type": "module",
     "version": "0.0.1",
     "description": "",
     "main": "index.js",
@@ -17,7 +18,7 @@
         "@types/node": "^13.13.5",
         "jest": "^26.0.1",
         "ts-jest": "^25.5.0",
-        "typescript": "^3.8.3"
+        "typescript": "^3.9.2"
     },
     "dependencies": {
         "@blw/utils": "0.0.7",
