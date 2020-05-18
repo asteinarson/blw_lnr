@@ -1,28 +1,33 @@
 #!/usr/bin/env node
 
-import { Command } from "commander";
+import Command from "commander";
 import * as lnr from "./cmd";
 
-let cmd = new Command();
+let cmd = Command;
 
 cmd.command("init ")
     .description(
         "Initialize the root from where lnr runs from (creates lnr.json)"
     )
     .action(() => {
-        lnr.init();
+        let r = lnr.init();
+        process.exit(r);
     });
 
 cmd.command("fetch <repo_url>")
     .description("Fetch a repository to current project")
+    .option("-l, --local", "Fetch, record in file lnr-local.json")
     .option("-b, --bind", "Bind repositry into current package.json")
+    .option(
+        "-r, --recursive",
+        "Also bind package into sub packages (aka Yarn workspaces)"
+    )
     .action((repo_url, options) => {
         lnr.fetch(repo_url, options);
     });
 
 cmd.command("bind <name>")
     .description("Bind local repository into package.json - via node_modules")
-    .option("-l, --local", "Do a local binding (in file lnr-local.json)")
     .option(
         "-r, --recursive",
         "Also bind package into sub packages (aka Yarn workspaces)"
