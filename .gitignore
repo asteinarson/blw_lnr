@@ -6,6 +6,8 @@ src/lib
 
 tsconfig*.tsbuildinfo
 
+lnr.json 
+
 # save/restore files in Node.js interactive shell (REPL)
 *.njs 
 
