@@ -42,38 +42,53 @@ export function init() {
 
 // git@github.com:jonaskello/tsc-import-alias-issue.git
 // https://github.com/jonaskello/tsc-import-alias-issue.git
-export function repoFetch(
+export async function repoFetch(
     repo_url: string,
     options: AnyObject
-): Promise<any> | number {
+): Promise<any> {
     console.log("repoFetch");
     console.log(repo_url);
     console.log(options.bind);
 
     // Fetch the repo, store under 'lnr' folder
-    let lnr_dir = getLnrDir();
-    if (typeof lnr_dir != "string")
+    let lnr_base_dir = getLnrDir();
+    if (typeof lnr_base_dir != "string")
         return errorLog("Failed finding lnr root (not initialized?)", null, 1);
-    process.chdir(lnr_dir);
+    let lnr_dir = lnr_base_dir + "/lnr";
+    try {
+        process.chdir(lnr_dir);
+    } catch (e) {
+        return errorLog(
+            "lnr directory invalid (no subdir ''lnr''): " + lnr_dir,
+            null,
+            1
+        );
+    }
 
-    return new Promise((res, rej) => {
-        exec(`git clone ${repo_url}`, (e, stdout, stderr) => {
-            if (!e) {
-                // Note it in lnr.json or lnr-local.json
-                let re = new RegExp(".*/([^/]+)\\.git");
-                let r = re.exec(repo_url);
-                if (!r || r.length < 1) rej("Failed parsing name of repo");
-                else {
-                    let name = r[1];
+    let re = new RegExp(".*/([^/]+)^");
+    let r = re.exec(repo_url);
+    if (!r || r.length < 1)
+        return errorLog("Failed parsing name of repo", null, 1);
+    let repo_name = r[1];
+    if (fs.existsSync(lnr_dir + "/" + repo_name))
+        return errorLog("The repo is already fetched: " + repo_name, null, 1);
 
+    try {
+        let r = await new Promise((res, rej) => {
+            exec(`git clone ${repo_url}`, (e, stdout, stderr) => {
+                if (!e) {
+                    // Store it in lnr.json
                     // Optionally bind it
                     res(0);
+                } else {
+                    rej(e);
                 }
-            } else {
-                rej(e);
-            }
+            });
         });
-    });
+        return r;
+    } catch (e) {
+        return errorLog(e, null, 1);
+    }
 }
 
 export function bind(name: string, options: AnyObject) {
