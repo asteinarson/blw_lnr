@@ -20,6 +20,27 @@ function getLnrDir() {
     }
 }
 
+function npmNameToRepoName(name: string) {
+    return name;
+}
+
+function findDependency(lnr_base_dir: string, repo_name: string) {
+    // Read package.json
+    try {
+        let p_json = JSON.parse(lnr_base_dir + "/" + "package.json");
+        for (let d of ["dependencies", "devDependencies"]) {
+            for (let p in p_json[d]) {
+                if (p == repo_name || npmNameToRepoName(p) == repo_name) {
+                    // Return if dependency or devDependency and recorded version
+                    return [d, p_json[d][p]];
+                }
+            }
+        }
+    } catch (e) {
+        return errorLog("Failed parsing packgage.json", null, 1);
+    }
+}
+
 export function init() {
     // Make sure the lnr directory and lnr.json exists
     if (fs.existsSync("./lnr.json")) {
@@ -70,15 +91,41 @@ export async function repoFetch(
     if (!r || r.length < 1)
         return errorLog("Failed parsing name of repo", null, 1);
     let repo_name = r[1];
-    if (fs.existsSync(lnr_dir + "/" + repo_name))
+    if (fs.existsSync(lnr_dir + "/" + repo_name)) {
+        // There might be a mismatch between state file and repo existence
         return errorLog("The repo is already fetched: " + repo_name, null, 1);
+    }
 
     try {
         let r = await new Promise((res, rej) => {
             exec(`git clone ${repo_url}`, (e, stdout, stderr) => {
                 if (!e) {
                     // Store it in lnr.json
-                    // Optionally bind it
+                    let file = options.local ? "lnr-local.json" : "lnr.json";
+                    try {
+                        let lnr_json_file = lnr_base_dir + "/" + file;
+                        let lnr_json = JSON.parse(lnr_json_file);
+                        if (options.bind) {
+                            // Bind it, keep track of whatever version was in package.json
+                            let r = findDependency(
+                                lnr_base_dir as string,
+                                repo_name
+                            );
+                            if (r) {
+                            } else {
+                            }
+                        } else {
+                            // No bindning, just fetching
+                            lnr_json.packages[repo_name] = null;
+                        }
+                        fs.writeFileSync(
+                            lnr_json_file,
+                            JSON.stringify(lnr_json)
+                        );
+                    } catch (e) {
+                        rej("Failed JSON parsing: " + file);
+                    }
+
                     res(0);
                 } else {
                     rej(e);
