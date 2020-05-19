@@ -21,12 +21,10 @@ function getLnrDir() {
 }
 
 export function init() {
-    console.log("init");
-
     // Make sure the lnr directory and lnr.json exists
     if (fs.existsSync("./lnr.json")) {
-        console.log(1);
-        return errorLog("Already initialized, an lnr.json exists", null, 1);
+        console.log("Already initialized, an lnr.json exists");
+        return 0;
     }
     if (ensureLnrDir()) return 2;
 
@@ -42,21 +40,19 @@ export function init() {
 
 // git@github.com:jonaskello/tsc-import-alias-issue.git
 // https://github.com/jonaskello/tsc-import-alias-issue.git
-export function fetch(
+export function repoFetch(
     repo_url: string,
     options: AnyObject
 ): Promise<any> | number {
-    console.log("fetch");
+    console.log("repoFetch");
     console.log(repo_url);
     console.log(options.bind);
 
     // Fetch the repo, store under 'lnr' folder
-    if (!fs.existsSync("./lnr")) {
-        let r = fs.mkdirSync("./lnr");
-        if (!fs.existsSync("./lnr"))
-            return errorLog("Failed creating directory 'lnr'", null, 1);
-    }
-    process.chdir("lnr");
+    let lnr_dir = getLnrDir();
+    if (typeof lnr_dir != "string")
+        return errorLog("Failed finding lnr root (not initialized?)", null, 1);
+    process.chdir(lnr_dir);
 
     return new Promise((res, rej) => {
         exec(`git clone ${repo_url}`, (e, stdout, stderr) => {
