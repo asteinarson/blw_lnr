@@ -14,7 +14,10 @@ cmd.command("init ")
 
 cmd.command("fetch <repo_url>")
     .description("Fetch a repository to current project")
-    .option("-l, --local", "Fetch, record in file lnr-local.json")
+    .option(
+        "-l, --local",
+        "Fetch, record repository in file lnr-local.json (instead of lnr.json)"
+    )
     .option("-b, --bind", "Bind repositry into current package.json")
     .option(
         "-r, --recursive",
