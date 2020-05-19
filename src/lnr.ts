@@ -21,7 +21,7 @@ cmd.command("fetch <repo_url>")
         "Also bind package into sub packages (aka Yarn workspaces)"
     )
     .action((repo_url, options) => {
-        lnr.fetch(repo_url, options);
+        lnr.repoFetch(repo_url, options);
     });
 
 cmd.command("bind <name>")
