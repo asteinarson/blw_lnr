@@ -35,6 +35,7 @@ export function init() {
     };
     fs.writeFileSync("./lnr.json", JSON.stringify(lnr));
     fs.writeFileSync("./lnr-local.json", JSON.stringify(lnr));
+
     return 0;
 }
 
