@@ -19,10 +19,6 @@ cmd.command("fetch <repo_url>")
         "Fetch, record repository in file lnr-local.json (instead of lnr.json)"
     )
     .option("-b, --bind", "Bind repositry into current package.json")
-    .option(
-        "-r, --recursive",
-        "Also bind package into sub packages (aka Yarn workspaces)"
-    )
     .action((repo_url, options) => {
         lnr.repoFetch(repo_url, options);
     });
@@ -33,6 +29,7 @@ cmd.command("bind <name>")
         "-r, --recursive",
         "Also bind package into sub packages (aka Yarn workspaces)"
     )
+    .option("-d, --dev", "Bind as a dev dependency")
     .action((name, options) => {
         lnr.bind(name, options);
     });
