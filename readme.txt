@@ -29,6 +29,7 @@ lnr unbind [-o/--old_version] [-p/--package_version] [-v/--version version_numbe
 lnr drop <package name>
 lnr status 
 lnr install [-f/--fetch_only]   # This both fetches repso and binds them into package.json:s.
+lnr fix     
 
 Directory and state files
 =========================
