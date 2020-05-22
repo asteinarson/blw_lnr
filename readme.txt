@@ -23,8 +23,8 @@ way, in workspace code.
 Commands
 ========
 lnr init    
-lnr fetch [-l/--local] [-b/--bind] [-r/--recursive] <repository link>
-lnr bind [-r/--recursive] <package name>
+lnr fetch [-l/--local] [-b/--bind] <repository link>
+lnr bind [-r/--recursive] [-d/--dev] <package name>
 lnr unbind [-o/--old_version] [-p/--package_version] [-v/--version version_number] <package name>
 lnr drop <package name>
 lnr status 
