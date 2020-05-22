@@ -17,6 +17,7 @@
     "devDependencies": {
         "@types/jest": "^25.2.1",
         "@types/node": "^13.13.5",
+        "@types/lodash": "^4.14.152",
         "jest": "^26.0.1",
         "ts-jest": "^25.5.0",
         "typescript": "^3.9.2"
