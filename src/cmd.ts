@@ -2,6 +2,7 @@ import { Dict, AnyObject, errorLog } from "@blw/utils";
 import * as fs from "fs";
 import * as path from "path";
 import { exec } from "child_process";
+import * as _ from "lodash";
 
 function ensureLnrDir() {
     if (!fs.existsSync("./lnr")) {
@@ -32,12 +33,37 @@ function findDependency(lnr_base_dir: string, repo_name: string) {
             for (let p in p_json[d]) {
                 if (p == repo_name || npmNameToRepoName(p) == repo_name) {
                     // Return if dependency or devDependency and recorded version
-                    return [d, p_json[d][p]];
+                    return [d, p, p_json[d][p]];
                 }
             }
         }
     } catch (e) {
         return errorLog("Failed parsing packgage.json", null, 1);
+    }
+}
+
+function readJsonField(json_file: string, field: string | string[]) {
+    // Read package.json
+    try {
+        let json = JSON.parse(json_file);
+        return _.get(json, field);
+    } catch (e) {
+        return errorLog("Failed readJsonField of: " + json_file, "" + e, 1);
+    }
+}
+
+function writeJsonField(
+    json_file: string,
+    field: string | string[],
+    value: any
+) {
+    // Read package.json
+    try {
+        let json = JSON.parse(json_file);
+        _.set(json, field, value);
+        fs.writeFileSync(json_file, JSON.stringify(json));
+    } catch (e) {
+        return errorLog("Failed writeJsonField of: " + json_file, "" + e, 1);
     }
 }
 
@@ -100,30 +126,30 @@ export async function repoFetch(
         let r = await new Promise((res, rej) => {
             exec(`git clone ${repo_url}`, (e, stdout, stderr) => {
                 if (!e) {
+                    // Find out the Node package name
+                    let node_name = readJsonField(
+                        "./" + repo_name + "/package.json",
+                        "name"
+                    );
+                    if (!node_name)
+                        rej(
+                            "Failed reading 'name' of package.json of imported repository"
+                        );
                     // Store it in lnr.json
                     let file = options.local ? "lnr-local.json" : "lnr.json";
                     try {
-                        let lnr_json_file = lnr_base_dir + "/" + file;
-                        let lnr_json = JSON.parse(lnr_json_file);
-                        if (options.bind) {
-                            // Bind it, keep track of whatever version was in package.json
-                            let r = findDependency(
-                                lnr_base_dir as string,
-                                repo_name
-                            );
-                            if (r) {
-                            } else {
-                            }
-                        } else {
-                            // No bindning, just fetching
-                            lnr_json.packages[repo_name] = null;
-                        }
-                        fs.writeFileSync(
-                            lnr_json_file,
-                            JSON.stringify(lnr_json)
+                        // Just bindning here, fetching is another step
+                        writeJsonField(
+                            lnr_base_dir + "/" + file,
+                            ["packages", node_name],
+                            { repo_name }
                         );
+
+                        if (options.bind) {
+                            res(bind(repo_name, options));
+                        }
                     } catch (e) {
-                        rej("Failed JSON parsing: " + file);
+                        rej("Failed JSON parsing: " + file + " (" + e + ")");
                     }
 
                     res(0);
@@ -141,6 +167,65 @@ export async function repoFetch(
 export function bind(name: string, options: AnyObject) {
     console.log("bind");
     console.log(name);
+    let lnr_base_dir = getLnrDir();
+    if (typeof lnr_base_dir != "string")
+        return errorLog("Failed finding lnr root (not initialized?)", null, 1);
+    if (!fs.existsSync(lnr_base_dir + "/lnr/" + name))
+        return errorLog("Could not find local repository: " + name, null, 3);
+
+    // We have the repository, ready to bind
+    let r = findDependency(lnr_base_dir, name);
+    let [dev, node_name, node_version] = r ? r : [];
+    if (dev === null && options.dev) dev = true;
+
+    // See if it is in lnr.json or lnr-local.json
+    let lnr_json_file = "";
+    for (let file in ["lnr.json", "lnr-local.json"]) {
+        lnr_json_file = lnr_base_dir + "/" + file;
+        let lnr_json = JSON.parse(lnr_json_file);
+        if (lnr_json && lnr_json[name]) break;
+        lnr_json_file = "";
+    }
+    // If not found in a json file, assume it is in the main file
+    if (!lnr_json_file) lnr_json_file = lnr_base_dir + "/" + "lnr.json";
+
+    // Record info in lnr.json
+    try {
+        let lnr_json = JSON.parse(lnr_json_file);
+        lnr_json.packages[name] = {
+            node_name,
+            node_version,
+            dev,
+        };
+        fs.writeFileSync(lnr_json_file, JSON.stringify(lnr_json));
+    } catch (e) {
+        return errorLog(
+            "Failed JSON parsing: " + lnr_json_file + " (" + e + ")",
+            null,
+            4
+        );
+    }
+
+    // Make the link in package.json
+    try {
+        let pkg_json = JSON.parse(lnr_base_dir + "/package.json");
+        let field = dev ? "devDependencies" : "dependencies";
+        if (!node_name) node_name = name;
+        pkg_json[field][node_name] = "file:./lnr/" + name;
+        fs.writeFileSync(
+            lnr_base_dir + "/package.json",
+            JSON.stringify(pkg_json)
+        );
+    } catch (e) {
+        return errorLog("Failed package.json parsing/writing: " + e, null, 5);
+    }
+
+    console.log(
+        "Repository " +
+            node_name +
+            " is bound in package.json. Run npm/yarn link to generate symlinks."
+    );
+    return 0;
 }
 
 export function unbind(name: string, options: AnyObject) {
