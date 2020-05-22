@@ -20,7 +20,7 @@ cmd.command("fetch <repo_url>")
     )
     .option("-b, --bind", "Bind repositry into current package.json")
     .action((repo_url, options) => {
-        lnr.repoFetch(repo_url, options);
+        lnr.fetch(repo_url, options);
     });
 
 cmd.command("bind <name>")

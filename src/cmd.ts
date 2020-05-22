@@ -89,7 +89,7 @@ export function init() {
 
 // git@github.com:jonaskello/tsc-import-alias-issue.git
 // https://github.com/jonaskello/tsc-import-alias-issue.git
-export async function repoFetch(
+export async function fetch(
     repo_url: string,
     options: AnyObject
 ): Promise<any> {
