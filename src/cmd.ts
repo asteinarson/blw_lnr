@@ -56,7 +56,7 @@ function writeJsonField(
         let json_text = fs.readFileSync(json_file);
         let json = JSON.parse(json_text.toString());
         _.set(json, field, value);
-        fs.writeFileSync(json_file, JSON.stringify(json));
+        fs.writeFileSync(json_file, JSON.stringify(json, null, 4));
     } catch (e) {
         return errorLog("Failed writeJsonField of: " + json_file, "" + e, 1);
     }
@@ -75,8 +75,8 @@ export function init() {
             // name: version | null
         },
     };
-    fs.writeFileSync("./lnr.json", JSON.stringify(lnr));
-    fs.writeFileSync("./lnr-local.json", JSON.stringify(lnr));
+    fs.writeFileSync("./lnr.json", JSON.stringify(lnr, null, 4));
+    fs.writeFileSync("./lnr-local.json", JSON.stringify(lnr, null, 4));
 
     console.log("Initialized.");
     return 0;
@@ -88,10 +88,6 @@ export async function fetch(
     repo_url: string,
     options: AnyObject
 ): Promise<any> {
-    console.log("repoFetch");
-    console.log(repo_url);
-    console.log(options.bind);
-
     // Fetch the repo, store under 'lnr' folder
     let lnr_base_dir = getLnrDir();
     if (typeof lnr_base_dir != "string")
@@ -107,7 +103,7 @@ export async function fetch(
         );
     }
 
-    let re = new RegExp(".*/([^/]+)$");
+    let re = new RegExp(".*/([^/.]+)");
     let r = re.exec(repo_url);
     if (!r || r.length < 1)
         return errorLog("Failed parsing name of repo", null, 1);
@@ -160,8 +156,6 @@ export async function fetch(
 }
 
 export function bind(name: string, options: AnyObject) {
-    console.log("bind");
-    console.log(name);
     let lnr_base_dir = getLnrDir();
     if (typeof lnr_base_dir != "string")
         return errorLog("Failed finding lnr root (not initialized?)", null, 1);
@@ -180,6 +174,13 @@ export function bind(name: string, options: AnyObject) {
                 1
             );
         }
+    }
+    if (repo_lnr_data.node_version) {
+        return errorLog(
+            "The repository is already bound in package.json",
+            null,
+            1
+        );
     }
 
     let repo_name = repo_lnr_data.repo_name;
@@ -201,7 +202,8 @@ export function bind(name: string, options: AnyObject) {
         return errorLog("Failed writing to lnr.json/lnr-local.json: ", null, 1);
 
     // Make the link in package.json
-    let field = dev ? "devDependencies" : "dependencies";
+    let field =
+        dev && dev != "dependencies" ? "devDependencies" : "dependencies";
     r = writeJsonField(
         lnr_base_dir + "/package.json",
         [field, name],
