@@ -28,8 +28,9 @@ lnr bind [-r/--recursive] [-d/--dev] <package name>
 lnr unbind [-o/--old_version] [-p/--package_version] [-v/--version version_number] <package name>
 lnr drop <package name>
 lnr status 
-lnr install [-f/--fetch_only]   # This both fetches repso and binds them into package.json:s.
 lnr fix     
+
+lnr install [-f/--fetch_only]   # This both fetches all repos and binds them into package.json:s.
 
 Directory and state files
 =========================
