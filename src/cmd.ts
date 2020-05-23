@@ -106,7 +106,7 @@ export async function fetch(
     let re = new RegExp(".*/([^/.]+)");
     let r = re.exec(repo_url);
     if (!r || r.length < 1)
-        return errorLog("Failed parsing name of repo", null, 1);
+        return errorLog("Failed parsing name of repo", null, 2);
     let repo_name = r[1];
 
     let cmd = `git clone ${repo_url}`;
@@ -149,6 +149,8 @@ export async function fetch(
                 }
             });
         });
+        if (r) return errorLog(r, null, 3);
+        else console.log("Repo was fetched to directory: lnr/" + repo_name);
         return r;
     } catch (e) {
         return errorLog(e, null, 1);
