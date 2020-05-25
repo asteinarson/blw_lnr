@@ -4,11 +4,11 @@ import * as path from "path";
 import { exec } from "child_process";
 import _ from "lodash";
 
-function ensureLnrDir() {
-    if (!fs.existsSync("./lnr")) {
-        let r = fs.mkdirSync("./lnr");
-        if (!fs.existsSync("./lnr"))
-            return errorLog("Failed creating directory 'lnr'", null, 1);
+function ensureDir(dir: string) {
+    if (!fs.existsSync(dir)) {
+        let r = fs.mkdirSync(dir);
+        if (!fs.existsSync(dir))
+            return errorLog("Failed creating directory: " + dir, null, 1);
     }
 }
 
@@ -68,7 +68,8 @@ export function init() {
         console.log("Already initialized, an lnr.json exists");
         return 0;
     }
-    if (ensureLnrDir()) return 2;
+    if (ensureDir("./lnr")) return 2;
+    if (ensureDir("./lnr/node_modules")) return 3;
 
     let lnr = {
         packages: {
@@ -213,26 +214,48 @@ export function bind(name: string, options: AnyObject) {
     );
     if (r) return errorLog("Failed package.json parsing/writing: ", null, 5);
 
+    // Move the package into lnr/node_modules
+    let re_org_name = new RegExp("^(@[a-zA-Z_]+)/([a-zA-Z_]+)");
+    let r1 = re_org_name.exec(name);
+    let [org, sub_name] = r1 ? r1.slice(1, 3) : [null, name];
+    if (org) ensureDir(lnr_base_dir + "/lnr/node_modules/" + org);
+    if (fs.existsSync(lnr_base_dir + "/node_modules/" + name)) {
+        fs.renameSync(
+            lnr_base_dir + "/node_modules/" + name,
+            lnr_base_dir + "/lnr/node_modules/" + name
+        );
+    }
+
+    // Generate the symlink
+    let tgt = (org ? "../../" : "../") + "lnr/" + repo_name;
+    fs.symlinkSync(tgt, lnr_base_dir + "/node_modules/" + name);
+
     console.log(
         "Repository " +
             name +
-            " is bound in package.json. Run npm/yarn link to generate symlinks."
+            " is bound in package.json. Symlink was generated in node_modules."
     );
     return 0;
 }
 
 export function unbind(name: string, options: AnyObject) {
-    console.log("unbind");
-    console.log(name);
+    //  Update lnr.json-lnr / lnr-local.json
+    // Remove symlink
+    // Update package.json with old/new/specified version
+    // Or run npm -i module version
+    // drop ?
 }
 
 export function drop(name: string, options: AnyObject) {
-    console.log("drop");
-    console.log(name);
+    // Check that not bound
+    // Remove repo from lnr.json or lnr-local.json
+    // Remove the repository
 }
 
 export function status(options: AnyObject) {
-    console.log("status");
+    // Check repos against lnr.json
+    // Check  repos against package.json
+    // Check package.json against node_modules
 }
 
 export function install(options: AnyObject) {
