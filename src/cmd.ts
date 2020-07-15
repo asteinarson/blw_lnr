@@ -215,6 +215,7 @@ export function bind(name: string, options: AnyObject) {
     if (r) return errorLog("Failed package.json parsing/writing: ", null, 5);
 
     // Move the package into lnr/node_modules
+    // We back up the original node module there (potentially used in unbind)
     let re_org_name = new RegExp("^(@[a-zA-Z_]+)/([a-zA-Z_]+)");
     let r1 = re_org_name.exec(name);
     let [org, sub_name] = r1 ? r1.slice(1, 3) : [null, name];

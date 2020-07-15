@@ -26,7 +26,7 @@ lnr init
 lnr fetch [-l/--local] [-b/--bind] <repository link>
 lnr bind [-r/--recursive] [-d/--dev] <package name>
 lnr unbind [-o/--old_version] [-p/--package_version] [-v/--version version_number] <package name>
-lnr drop <package name>
+lnr drop [-d/--drop] <package name>
 lnr status 
 lnr fix     
 
