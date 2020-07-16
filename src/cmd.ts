@@ -4,6 +4,26 @@ import * as path from "path";
 import { exec } from "child_process";
 import _ from "lodash";
 
+function tryThis1(
+    f: (...args: any[]) => any,
+    args: any[],
+    default_val: any = null
+) {
+    try {
+        return f(args);
+    } catch (e) {
+        return default_val == "__exception_value__" ? e : default_val;
+    }
+}
+
+function tryThis<T>(f: () => T, default_val: any = null): T {
+    try {
+        return f();
+    } catch (e) {
+        return default_val == "__exception_value__" ? e : default_val;
+    }
+}
+
 function ensureDir(dir: string) {
     if (!fs.existsSync(dir)) {
         let r = fs.mkdirSync(dir);
@@ -35,14 +55,19 @@ function findDependency(lnr_base_dir: string, repo_name: string) {
     }
 }
 
-function readJsonField(json_file: string, field: string | string[]) {
+function readJsonField(
+    json_file: string,
+    field: string | string[],
+    default_value: any = undefined
+) {
     // Read package.json
     try {
         let json_text = fs.readFileSync(json_file);
         let json = JSON.parse(json_text.toString());
         return _.get(json, field);
     } catch (e) {
-        return errorLog("Failed readJsonField of: " + json_file, "" + e, 1);
+        let r = default_value === undefined ? 1 : default_value;
+        return errorLog("Failed readJsonField of: " + json_file, "" + e, r);
     }
 }
 
@@ -64,10 +89,11 @@ function writeJsonField(
 
 export function init() {
     if (!fs.existsSync("node_modules")) {
-        console.log(
-            "There must be a node_modules folder in the lnr base directory"
+        return errorLog(
+            "There must be a node_modules folder in the lnr base directory",
+            null,
+            4
         );
-        return 4;
     }
 
     // Make sure the lnr directory and lnr.json exists
@@ -262,8 +288,46 @@ export function drop(name: string, options: AnyObject) {
 
 export function status(options: AnyObject) {
     // Check repos against lnr.json
-    // Check  repos against package.json
-    // Check package.json against node_modules
+    let lnr_dir = getLnrDir();
+    if (typeof lnr_dir != "string") {
+        return errorLog(
+            "No lnr.json found (in this or parent directory)",
+            null,
+            1
+        );
+    }
+    lnr_dir += "/";
+
+    // Log output format
+    for (let f of ["lnr.json", "lnr-local.json"]) {
+        console.log("...modules in: " + f);
+        console.log(
+            "<package_name> (<repo_name>) \t<bind status> \t<repo version> \t<node version> \t<dep type>"
+        );
+        let pkgs = readJsonField(lnr_dir + f, "packages");
+        for (let m in pkgs) {
+            // 'm' is the package.json name of the package
+            // Collect info on this repo/package
+            let m_info = pkgs[m];
+            let lnr_repo = lnr_dir + "lnr/" + m_info.repo_name;
+            let fetched = fs.existsSync(lnr_repo);
+            let fetched_version = readJsonField(
+                lnr_repo + "/package.json",
+                "version",
+                "<no version>"
+            );
+            let node_module_path = lnr_dir + "node_modules/" + m;
+            let node_module_exist = fs.existsSync(node_module_path);
+            let link = tryThis(() => fs.readlinkSync(node_module_path));
+            let link_status = "<no link>";
+            if (link)
+                link_status =
+                    link.substring(0, 4) == "lnr/" ? "<bound>" : "<other link>";
+            console.log(
+                `${m} (${m_info.repo_name}) \t${link_status}  \t${fetched_version} \t${m_info.node_version} \t${m_info.dev}`
+            );
+        }
+    }
 }
 
 export function install(options: AnyObject) {
