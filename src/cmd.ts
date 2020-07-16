@@ -63,6 +63,13 @@ function writeJsonField(
 }
 
 export function init() {
+    if (!fs.existsSync("node_modules")) {
+        console.log(
+            "There must be a node_modules folder in the lnr base directory"
+        );
+        return 4;
+    }
+
     // Make sure the lnr directory and lnr.json exists
     if (fs.existsSync("./lnr.json")) {
         console.log("Already initialized, an lnr.json exists");
