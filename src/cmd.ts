@@ -1,8 +1,9 @@
-import { Dict, AnyObject, errorLog } from "@blw/utils";
+import { Dict, AnyObject, errorLog, isEmpty } from "@blw/utils";
 import * as fs from "fs";
 import * as path from "path";
 import { exec } from "child_process";
 import _ from "lodash";
+import { isNumber } from "util";
 
 function tryThis1(
     f: (...args: any[]) => any,
@@ -194,12 +195,11 @@ export async function fetch(
     }
 }
 
-export function bind(name: string, options: AnyObject) {
-    let lnr_base_dir = getLnrDir();
-    if (typeof lnr_base_dir != "string")
-        return errorLog("Failed finding lnr root (not initialized?)", null, 1);
-
+function getPackageLnrData(name: string): [string, AnyObject] {
     // See if it is in lnr.json or lnr-local.json
+    let lnr_base_dir = getLnrDir();
+    if (typeof lnr_base_dir == "number") return ["", {}];
+
     let lnr_json_file = lnr_base_dir + "/" + "lnr.json";
     let repo_lnr_data = readJsonField(lnr_json_file, ["packages", name]);
     if (!repo_lnr_data) {
@@ -210,10 +210,40 @@ export function bind(name: string, options: AnyObject) {
             return errorLog(
                 "No such repository in lnr.json or lnr-local.json",
                 null,
-                1
+                ["", {}]
             );
         }
     }
+    return [lnr_json_file, repo_lnr_data];
+}
+
+export function bind(name: string, options: AnyObject) {
+    let lnr_base_dir = getLnrDir();
+    if (typeof lnr_base_dir != "string")
+        return errorLog("Failed finding lnr root (not initialized?)", null, 1);
+
+    // See if it is in lnr.json or lnr-local.json
+    let [lnr_json_file, repo_lnr_data] = getPackageLnrData(name);
+    if (isEmpty(repo_lnr_data))
+        return errorLog(
+            "No such repository in lnr.json or lnr-local.json",
+            null,
+            1
+        );
+    // let lnr_json_file = lnr_base_dir + "/" + "lnr.json";
+    // let repo_lnr_data = readJsonField(lnr_json_file, ["packages", name]);
+    // if (!repo_lnr_data) {
+    //     lnr_json_file = lnr_base_dir + "/" + "lnr-local.json";
+    //     repo_lnr_data = readJsonField(lnr_json_file, ["packages", name]);
+    //     if (!repo_lnr_data) {
+    //         // It could be we should just accept it's not recorded, and bind to lnr.json
+    //         return errorLog(
+    //             "No such repository in lnr.json or lnr-local.json",
+    //             null,
+    //             1
+    //         );
+    //     }
+    // }
     if (repo_lnr_data.node_version) {
         return errorLog(
             "The repository is already bound in package.json",
@@ -276,7 +306,7 @@ export function bind(name: string, options: AnyObject) {
 }
 
 export function unbind(name: string, options: AnyObject) {
-    //  Update lnr.json-lnr / lnr-local.json
+    // Update lnr.json-lnr / lnr-local.json
     // Remove symlink
     // Update package.json with old/new/specified version
     // Or run npm -i module version
