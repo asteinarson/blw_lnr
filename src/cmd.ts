@@ -323,8 +323,8 @@ export function unbind(name: string, options: AnyObject) {
 
     // Find out which NPM package version to use
     let version = repo_lnr_data.node_version;
-    if (options.version) version = options.version;
-    else if (options.package_version) {
+    if (options.explVersion) version = options.explVersion;
+    else if (options.packageVersion) {
         version = readJsonField(
             lnr_base_dir + "/lnr/" + repo_lnr_data.repo_namne + "/package.json",
             "version"
@@ -342,11 +342,7 @@ export function unbind(name: string, options: AnyObject) {
     // Update lnr.json-lnr / lnr-local.json
     let revert_version = version == repo_lnr_data.node_version;
     delete repo_lnr_data.node_version;
-    writeJsonField(
-        lnr_base_dir + "/" + lnr_json_file,
-        ["packages", name],
-        repo_lnr_data
-    );
+    writeJsonField(lnr_json_file, ["packages", name], repo_lnr_data);
 
     // Update package.json and potentially link back previous package
     writeJsonField(
