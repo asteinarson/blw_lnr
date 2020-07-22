@@ -36,10 +36,10 @@ cmd.command("bind <name>")
 
 cmd.command("unbind <name>")
     .description("Unbind a local repository from package.json")
-    .option("-o, --old_version", "Restore to old version")
+    .option("-o, --old_version", "Restore to old version (default)")
     .option(
         "-p, --package_version",
-        "Set to version in in package.json, in bound repository"
+        "Set to version in package.json, in bound repository"
     )
     .option(
         "-v, --version <version>",
