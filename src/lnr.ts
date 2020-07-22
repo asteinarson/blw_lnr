@@ -38,11 +38,11 @@ cmd.command("unbind <name>")
     .description("Unbind a local repository from package.json")
     .option("-o, --old_version", "Restore to old version (default)")
     .option(
-        "-p, --package_version",
+        "-p, --package-version",
         "Set to version in package.json, in bound repository"
     )
     .option(
-        "-v, --version <version>",
+        "-v, --expl-version <version>",
         "Set to explicit version number (or one of 'o', 'p')"
     )
     .action((name, options) => {
