@@ -306,11 +306,71 @@ export function bind(name: string, options: AnyObject) {
 }
 
 export function unbind(name: string, options: AnyObject) {
+    let lnr_base_dir = getLnrDir();
+    if (typeof lnr_base_dir != "string")
+        return errorLog("Failed finding lnr root (not initialized?)", null, 1);
+
+    // See if it is in lnr.json or lnr-local.json
+    let [lnr_json_file, repo_lnr_data] = getPackageLnrData(name);
+    if (isEmpty(repo_lnr_data))
+        return errorLog(
+            "No such repository in lnr.json or lnr-local.json",
+            null,
+            1
+        );
+    if (!repo_lnr_data.node_version)
+        return errorLog("The repository is not bound in package.json", null, 1);
+
+    // Find out which NPM package version to use
+    let version = repo_lnr_data.node_version;
+    if (options.version) version = options.version;
+    else if (options.package_version) {
+        version = readJsonField(
+            lnr_base_dir + "/lnr/" + repo_lnr_data.repo_namne + "/package.json",
+            "version"
+        );
+    }
+    // See that version is a semver
+    let re_npm_ver = RegExp("^\\s*[\\^~]?\\d+\\.\\d+\\.\\d+\\s*$");
+    if (!re_npm_ver.test(version))
+        return errorLog(
+            `The version ${version} does not have NPM version syntax`,
+            null,
+            2
+        );
+
     // Update lnr.json-lnr / lnr-local.json
-    // Remove symlink
-    // Update package.json with old/new/specified version
-    // Or run npm -i module version
-    // drop ?
+    let revert_version = version == repo_lnr_data.node_version;
+    delete repo_lnr_data.node_version;
+    writeJsonField(
+        lnr_base_dir + "/" + lnr_json_file,
+        ["packages", name],
+        repo_lnr_data
+    );
+
+    // Update package.json and potentially link back previous package
+    writeJsonField(
+        lnr_base_dir + "/package.json",
+        [repo_lnr_data.dev, name],
+        version
+    );
+    if (revert_version) {
+        // Link back original into node_modules
+        fs.unlinkSync(lnr_base_dir + "/node_modules/" + name);
+        fs.renameSync(
+            lnr_base_dir + "/lnr/node_modules/" + name,
+            lnr_base_dir + "/node_modules/" + name
+        );
+        console.log(
+            "package.json updated, old version of the module was restored, in node_modules"
+        );
+    } else {
+        // Have to write a specific version into package.json
+        console.log(
+            "package.json updated, please run npm/yarn/pnpm install to adjust for change"
+        );
+    }
+    return 0;
 }
 
 export function drop(name: string, options: AnyObject) {
