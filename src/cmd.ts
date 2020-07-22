@@ -184,7 +184,10 @@ export async function fetch(
             });
         });
         if (r) return errorLog(r, null, 3);
-        else console.log("Repo was fetched to directory: lnr/" + repo_name);
+        else {
+            console.log("Repo was fetched to directory: lnr/" + repo_name);
+            if (options.bind) return bind(name, options);
+        }
         return r;
     } catch (e) {
         return errorLog(e, null, 1);
