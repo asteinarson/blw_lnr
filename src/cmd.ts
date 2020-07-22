@@ -148,7 +148,7 @@ export async function fetch(
     if (fs.existsSync(lnr_dir + "/" + repo_name)) cmd = "pwd";
 
     try {
-        let r = await new Promise((res, rej) => {
+        let r = await new Promise<string | null>((res, rej) => {
             exec(cmd, (e, stdout, stderr) => {
                 if (!e) {
                     // Find out the Node package name
@@ -177,7 +177,7 @@ export async function fetch(
                         rej("Failed JSON parsing: " + file + " (" + e + ")");
                     }
 
-                    res(0);
+                    res(null);
                 } else {
                     rej(e);
                 }
@@ -299,11 +299,12 @@ export function status(options: AnyObject) {
     lnr_dir += "/";
 
     // Log output format
-    for (let f of ["lnr.json", "lnr-local.json"]) {
-        console.log("...modules in: " + f);
+    if (options.verbose) {
         console.log(
-            "<package_name> (<repo_name>) \t<bind status> \t<repo version> \t<node version> \t<dep type>"
+            "<lnr_file> \t<package_name> (<repo_name>) \t<bind status> \t<repo version> \t<node version> \t<dep type>"
         );
+    }
+    for (let f of ["lnr.json", "lnr-local.json"]) {
         let pkgs = readJsonField(lnr_dir + f, "packages");
         for (let m in pkgs) {
             // 'm' is the package.json name of the package
@@ -322,9 +323,9 @@ export function status(options: AnyObject) {
             let link_status = "<no link>";
             if (link)
                 link_status =
-                    link.substring(0, 4) == "lnr/" ? "<bound>" : "<other link>";
+                    link.indexOf("/lnr/") != -1 ? "<bound>" : "<other link>";
             console.log(
-                `${m} (${m_info.repo_name}) \t${link_status}  \t${fetched_version} \t${m_info.node_version} \t${m_info.dev}`
+                `${f} \t${m} (${m_info.repo_name}) \t${link_status}  \t${fetched_version} \t${m_info.node_version} \t${m_info.dev}`
             );
         }
     }
