@@ -57,6 +57,7 @@ cmd.command("drop <name>")
 
 cmd.command("status")
     .description("Status of repositories/packages from current lnr root")
+    .option("-v, --verbose", "More info (column headers)")
     .action((options) => {
         lnr.status(options);
     });
