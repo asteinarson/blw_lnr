@@ -51,6 +51,7 @@ cmd.command("unbind <name>")
 
 cmd.command("drop <name>")
     .description("Drop the local repository")
+    .option("-u, --unbind", "Unbind and drop")
     .action((name, options) => {
         lnr.drop(name, options);
     });
