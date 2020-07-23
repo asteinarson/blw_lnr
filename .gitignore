@@ -6,6 +6,7 @@ src/lib
 
 tsconfig*.tsbuildinfo
 
+lnr
 lnr.json 
 lnr-local.json
 
