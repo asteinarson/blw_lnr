@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { exec } from "child_process";
 import _ from "lodash";
-import { isNumber } from "util";
+import { isNumber, isArray } from "util";
 
 function tryThis1(
     f: (...args: any[]) => any,
@@ -82,6 +82,25 @@ function writeJsonField(
         let json_text = fs.readFileSync(json_file);
         let json = JSON.parse(json_text.toString());
         _.set(json, field, value);
+        fs.writeFileSync(json_file, JSON.stringify(json, null, 4));
+    } catch (e) {
+        return errorLog("Failed writeJsonField of: " + json_file, "" + e, 1);
+    }
+}
+
+function dropJsonField(json_file: string, field: string | string[]) {
+    // Read package.json
+    try {
+        let json_text = fs.readFileSync(json_file);
+        let json = JSON.parse(json_text.toString());
+        if (Array.isArray(field)) {
+            if (!field.length) return;
+            let parent = _.get(json, field.slice(0, field.length - 1));
+            let key = field.pop();
+            delete parent[key as string];
+        } else {
+            delete json[field];
+        }
         fs.writeFileSync(json_file, JSON.stringify(json, null, 4));
     } catch (e) {
         return errorLog("Failed writeJsonField of: " + json_file, "" + e, 1);
@@ -230,12 +249,13 @@ export function bind(name: string, options: AnyObject) {
             null,
             1
         );
+
+    if (repo_lnr_data.node_version)
         return errorLog(
             "The repository is already bound in package.json",
             null,
             1
         );
-    }
 
     let repo_name = repo_lnr_data.repo_name;
     if (!fs.existsSync(lnr_base_dir + "/lnr/" + repo_name))
@@ -355,10 +375,39 @@ export function unbind(name: string, options: AnyObject) {
 }
 
 export function drop(name: string, options: AnyObject) {
-    // Check that not bound
+    let lnr_base_dir = getLnrDir();
+    if (typeof lnr_base_dir != "string")
+        return errorLog("Failed finding lnr root (not initialized?)", null, 1);
+
+    // Check if bound or not
+    let [lnr_json_file, repo_lnr_data] = getPackageLnrData(name);
+    if (isEmpty(repo_lnr_data))
+        return errorLog(
+            "No such repository in lnr.json or lnr-local.json",
+            null,
+            1
+        );
+
+    if (repo_lnr_data.node_version) {
+        if (!options.unbind)
+            return errorLog(
+                "The repository is bound in package.json. Use 'unbind' first or the '-u' option",
+                null,
+                2
+            );
+        if (unbind(name, options)) {
+            console.log("Failed unbinding repository");
+            return 3;
+        }
+    }
 
     // Remove repo from lnr.json or lnr-local.json
+    dropJsonField(lnr_json_file, ["packages", name]);
+
     // Remove the repository
+    fs.rmdirSync(lnr_base_dir + "/lnr/" + repo_lnr_data.repo_name);
+
+    return 0;
 }
 
 export function status(options: AnyObject) {
