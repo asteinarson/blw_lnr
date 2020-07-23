@@ -230,21 +230,6 @@ export function bind(name: string, options: AnyObject) {
             null,
             1
         );
-    // let lnr_json_file = lnr_base_dir + "/" + "lnr.json";
-    // let repo_lnr_data = readJsonField(lnr_json_file, ["packages", name]);
-    // if (!repo_lnr_data) {
-    //     lnr_json_file = lnr_base_dir + "/" + "lnr-local.json";
-    //     repo_lnr_data = readJsonField(lnr_json_file, ["packages", name]);
-    //     if (!repo_lnr_data) {
-    //         // It could be we should just accept it's not recorded, and bind to lnr.json
-    //         return errorLog(
-    //             "No such repository in lnr.json or lnr-local.json",
-    //             null,
-    //             1
-    //         );
-    //     }
-    // }
-    if (repo_lnr_data.node_version) {
         return errorLog(
             "The repository is already bound in package.json",
             null,
@@ -371,6 +356,7 @@ export function unbind(name: string, options: AnyObject) {
 
 export function drop(name: string, options: AnyObject) {
     // Check that not bound
+
     // Remove repo from lnr.json or lnr-local.json
     // Remove the repository
 }
