@@ -33,6 +33,28 @@ function ensureDir(dir: string) {
     }
 }
 
+// Borrowed from https://coderrocketfuel.com/article/remove-both-empty-and-non-empty-directories-using-node-js
+function removeDirSync(path: string) {
+    if (fs.existsSync(path)) {
+        const files = fs.readdirSync(path);
+
+        if (files.length > 0) {
+            files.forEach(function (filename) {
+                if (fs.statSync(path + "/" + filename).isDirectory()) {
+                    removeDirSync(path + "/" + filename);
+                } else {
+                    fs.unlinkSync(path + "/" + filename);
+                }
+            });
+            fs.rmdirSync(path);
+        } else {
+            fs.rmdirSync(path);
+        }
+    } else {
+        return errorLog("Directory path not found.", null, 1);
+    }
+}
+
 function getLnrDir() {
     let dir = process.cwd();
     while (true) {
@@ -190,8 +212,11 @@ export async function fetch(
                             { repo_name }
                         );
 
+                        console.log(
+                            "Repo was fetched to directory: lnr/" + repo_name
+                        );
                         if (options.bind) {
-                            res(bind(repo_name, options));
+                            res(bind(node_name, options));
                         }
                     } catch (e) {
                         rej("Failed JSON parsing: " + file + " (" + e + ")");
@@ -204,11 +229,7 @@ export async function fetch(
             });
         });
         if (r) return errorLog(r, null, 3);
-        else {
-            console.log("Repo was fetched to directory: lnr/" + repo_name);
-            if (options.bind) return bind(name, options);
-        }
-        return r;
+        return 0;
     } catch (e) {
         return errorLog(e, null, 1);
     }
@@ -405,7 +426,7 @@ export function drop(name: string, options: AnyObject) {
     dropJsonField(lnr_json_file, ["packages", name]);
 
     // Remove the repository
-    fs.rmdirSync(lnr_base_dir + "/lnr/" + repo_lnr_data.repo_name);
+    removeDirSync(lnr_base_dir + "/lnr/" + repo_lnr_data.repo_name);
 
     return 0;
 }
