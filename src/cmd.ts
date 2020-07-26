@@ -218,10 +218,9 @@ export function bind(name: string, options: AnyObject) {
     let [org, sub_name] = r1 ? r1.slice(1, 3) : [null, name];
     if (org) ensureDir(lnr_base_dir + "/lnr/node_modules/" + org);
     if (fs.existsSync(lnr_base_dir + "/node_modules/" + name)) {
-        fs.renameSync(
-            lnr_base_dir + "/node_modules/" + name,
-            lnr_base_dir + "/lnr/node_modules/" + name
-        );
+        let move_to = lnr_base_dir + "/lnr/node_modules/" + name;
+        if (fs.existsSync(move_to)) removeDirSync(move_to);
+        fs.renameSync(lnr_base_dir + "/node_modules/" + name, move_to);
     }
 
     // Generate the symlink
