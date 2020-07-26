@@ -257,7 +257,7 @@ export function unbind(name: string, options: AnyObject) {
     if (options.explVersion) version = options.explVersion;
     else if (options.packageVersion) {
         version = readJsonField(
-            lnr_base_dir + "/lnr/" + repo_lnr_data.repo_namne + "/package.json",
+            lnr_base_dir + "/lnr/" + repo_lnr_data.repo_name + "/package.json",
             "version"
         );
     }
