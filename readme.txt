@@ -24,11 +24,10 @@ Commands
 ========
 lnr init    
 lnr fetch [-l/--local] [-b/--bind] <repository link>
-lnr bind [-r/--recursive] [-d/--dev] <package name>
-lnr unbind [-o/--old_version] [-p/--package_version] [-v/--version version_number] <package name>
-lnr drop [-d/--drop] <package name>
-lnr status 
-lnr fix     
+lnr bind [-d/--dev] <package name>
+lnr unbind [-o/--old_version] [-p/--package_version] [-v/--expl-version version_number] <package name>
+lnr drop [-u/--unbind] <package name>
+lnr status [-v/--verbose]
 
 lnr install [-f/--fetch_only]   # This both fetches all repos and binds them into package.json:s.
 

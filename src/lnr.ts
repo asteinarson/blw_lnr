@@ -25,11 +25,14 @@ cmd.command("fetch <repo_url>")
 
 cmd.command("bind <name>")
     .description("Bind local repository into package.json - via node_modules")
+    // .option(
+    //     "-r, --recursive",
+    //     "Also bind package into sub packages (aka Yarn workspaces)"
+    // )
     .option(
-        "-r, --recursive",
-        "Also bind package into sub packages (aka Yarn workspaces)"
+        "-d, --dev",
+        "Bind as a dev dependency (only useful when this package is not already in package.json)"
     )
-    .option("-d, --dev", "Bind as a dev dependency")
     .action((name, options) => {
         lnr.bind(name, options);
     });
@@ -39,7 +42,7 @@ cmd.command("unbind <name>")
     .option("-o, --old_version", "Restore to old version (default)")
     .option(
         "-p, --package-version",
-        "Set to version in package.json, in bound repository"
+        "Set to version in package.json, of the bound repository"
     )
     .option(
         "-v, --expl-version <version>",
