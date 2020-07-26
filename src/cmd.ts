@@ -1,67 +1,21 @@
-import { Dict, AnyObject, errorLog, isEmpty } from "@blw/utils";
+import {
+    tryThis,
+    AnyObject,
+    errorLog,
+    isEmpty,
+    removeDirSync,
+    ensureDir,
+    findDirWith,
+    readJsonField,
+    writeJsonField,
+    dropJsonField,
+} from "@blw/utils";
 import * as fs from "fs";
-import * as path from "path";
 import { exec } from "child_process";
 import _ from "lodash";
-import { isNumber, isArray } from "util";
-
-function tryThis1(
-    f: (...args: any[]) => any,
-    args: any[],
-    default_val: any = null
-) {
-    try {
-        return f(args);
-    } catch (e) {
-        return default_val == "__exception_value__" ? e : default_val;
-    }
-}
-
-function tryThis<T>(f: () => T, default_val: any = null): T {
-    try {
-        return f();
-    } catch (e) {
-        return default_val == "__exception_value__" ? e : default_val;
-    }
-}
-
-function ensureDir(dir: string) {
-    if (!fs.existsSync(dir)) {
-        let r = fs.mkdirSync(dir);
-        if (!fs.existsSync(dir))
-            return errorLog("Failed creating directory: " + dir, null, 1);
-    }
-}
-
-// Borrowed from https://coderrocketfuel.com/article/remove-both-empty-and-non-empty-directories-using-node-js
-function removeDirSync(path: string) {
-    if (fs.existsSync(path)) {
-        const files = fs.readdirSync(path);
-
-        if (files.length > 0) {
-            files.forEach(function (filename) {
-                if (fs.statSync(path + "/" + filename).isDirectory()) {
-                    removeDirSync(path + "/" + filename);
-                } else {
-                    fs.unlinkSync(path + "/" + filename);
-                }
-            });
-            fs.rmdirSync(path);
-        } else {
-            fs.rmdirSync(path);
-        }
-    } else {
-        return errorLog("Directory path not found.", null, 1);
-    }
-}
 
 function getLnrDir() {
-    let dir = process.cwd();
-    while (true) {
-        if (fs.existsSync(dir + "/lnr.json")) return path.normalize(dir);
-        if (path.normalize(dir) == "/") return 1;
-        dir += "/..";
-    }
+    return findDirWith("lnr.json");
 }
 
 function findDependency(lnr_base_dir: string, repo_name: string) {
@@ -74,58 +28,7 @@ function findDependency(lnr_base_dir: string, repo_name: string) {
             if (r) return [d, r];
         }
     } catch (e) {
-        return errorLog("Failed parsing packgage.json", null, 1);
-    }
-}
-
-function readJsonField(
-    json_file: string,
-    field: string | string[],
-    default_value: any = undefined
-) {
-    // Read package.json
-    try {
-        let json_text = fs.readFileSync(json_file);
-        let json = JSON.parse(json_text.toString());
-        return _.get(json, field);
-    } catch (e) {
-        let r = default_value === undefined ? 1 : default_value;
-        return errorLog("Failed readJsonField of: " + json_file, "" + e, r);
-    }
-}
-
-function writeJsonField(
-    json_file: string,
-    field: string | string[],
-    value: any
-) {
-    // Read package.json
-    try {
-        let json_text = fs.readFileSync(json_file);
-        let json = JSON.parse(json_text.toString());
-        _.set(json, field, value);
-        fs.writeFileSync(json_file, JSON.stringify(json, null, 4));
-    } catch (e) {
-        return errorLog("Failed writeJsonField of: " + json_file, "" + e, 1);
-    }
-}
-
-function dropJsonField(json_file: string, field: string | string[]) {
-    // Read package.json
-    try {
-        let json_text = fs.readFileSync(json_file);
-        let json = JSON.parse(json_text.toString());
-        if (Array.isArray(field)) {
-            if (!field.length) return;
-            let parent = _.get(json, field.slice(0, field.length - 1));
-            let key = field.pop();
-            delete parent[key as string];
-        } else {
-            delete json[field];
-        }
-        fs.writeFileSync(json_file, JSON.stringify(json, null, 4));
-    } catch (e) {
-        return errorLog("Failed writeJsonField of: " + json_file, "" + e, 1);
+        return errorLog("Failed parsing packgage.json", null, null);
     }
 }
 
@@ -215,8 +118,10 @@ export async function fetch(
                         console.log(
                             "Repo was fetched to directory: lnr/" + repo_name
                         );
+                        let r = 0;
                         if (options.bind) {
-                            res(bind(node_name, options));
+                            r = bind(node_name, options);
+                            if (r) throw "fetch - bind failed with code: " + r;
                         }
                     } catch (e) {
                         rej("Failed JSON parsing: " + file + " (" + e + ")");
@@ -238,7 +143,7 @@ export async function fetch(
 function getPackageLnrData(name: string): [string, AnyObject] {
     // See if it is in lnr.json or lnr-local.json
     let lnr_base_dir = getLnrDir();
-    if (typeof lnr_base_dir == "number") return ["", {}];
+    if (typeof lnr_base_dir != "string") return ["", {}];
 
     let lnr_json_file = lnr_base_dir + "/" + "lnr.json";
     let repo_lnr_data = readJsonField(lnr_json_file, ["packages", name]);
@@ -283,12 +188,12 @@ export function bind(name: string, options: AnyObject) {
         return errorLog("Local repository not found: " + repo_name, null, 1);
 
     // We have the repository, ready to bind
-    let r = findDependency(lnr_base_dir, name);
-    let [dev, node_version] = r ? r : [];
+    let d = findDependency(lnr_base_dir, name);
+    let [dev, node_version] = d ? d : [];
     if (dev === null && options.dev) dev = true;
 
     // Record info in lnr.json
-    r = writeJsonField(lnr_json_file, ["packages", name], {
+    let r = writeJsonField(lnr_json_file, ["packages", name], {
         repo_name,
         node_version,
         dev,
