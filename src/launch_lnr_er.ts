@@ -2,7 +2,8 @@
 import { spawn } from 'child_process';
 import path from 'path';
 
-const esm_dirname = path.dirname( process.argv[1] );
+// From - https://techsparx.com/nodejs/esnext/dirname-es-modules.html
+const esm_dirname = path.dirname(new URL(import.meta.url).pathname);
 let args = [ "--experimental-specifier-resolution=node",
     path.join(esm_dirname, "lnr.js"),
     ...process.argv.slice(2)];
