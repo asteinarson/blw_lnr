@@ -5,8 +5,9 @@
     "description": "",
     "main": "index.js",
     "bin": {
-        "lnr": "./lnr.sh",
-        "lnr_o": "./lib/lnr.js"
+        "lnr_sh": "./lnr.sh",
+        "lnr_o": "./lib/lnr.js",
+        "lnr": "./lib/launch_lnr_er.js"
     },
     "scripts": {
         "test": "jest"
