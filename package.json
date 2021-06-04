@@ -15,15 +15,15 @@
     "author": "",
     "license": "ISC",
     "devDependencies": {
-        "@types/jest": "^25.2.1",
-        "@types/node": "^13.13.5",
+        "@types/jest": "^26.0.23",
         "@types/lodash": "^4.14.152",
-        "jest": "^26.0.1",
+        "@types/node": "^13.13.5",
+        "jest": "^25.5.4",
         "ts-jest": "^25.5.0",
         "typescript": "^3.9.2"
     },
     "dependencies": {
-        "@blw/utils": "0.0.7",
+        "@blw/utils": "^0.0.9",
         "chalk": "^4.0.0",
         "commander": "^5.1.0",
         "i": "^0.3.6",
